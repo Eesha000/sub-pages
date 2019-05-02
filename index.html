@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Web Exploitation</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+	<main id="main-doc">
+		<div id="main-con">
+			<section id="header" class="sidecon">
+		  	<div id="header-con" class="con">
+		  		<nav id="navbar">
+           <button type="button" onclick="open_nav(this)" class="toggle-collapse" id="toggle_btn">
+             <span class="toggle-icon"></span>
+           </button>
+           <header id="side-head">Web Exploitation</header>
+				   <ul>
+				   	<li class="ar"><a href="#Introduction" class="nav-link"> Introduction</a></li>
+				   	<li class="ar"><a href="#SQL_Injection" class="nav-link"> SQL Injection </a></li>
+            <li class="ar"><a href="#Command_Injection" class="nav-link"> Command Injection</a></li>
+				   	<li class="ar"><a href="#Directory_Traversal" class="nav-link"> Directory Traversal</a></li>
+				   	<li class="ar"><a href="#Cross_Site_Request_Forgery" class="nav-link" > Cross Site Request Forgery </a></li>
+            <li class="ar"><a href="#Cross_Site_Scripting" class="nav-link" > Cross Site Scripting </a></li>
+            <li class="ar"><a href="#Server_Side_Request_Forgery" class="nav-link" > Server Side Request Forgery</a></li>
+				   </ul>
+				  </nav>
+          
+		  	</div>
+		  </section>
+
+      <section id="jumbotron">
+		  	<div id="jumbotron-con" class="con">
+		  	  <div id="child">
+            
+		  	  	<section id="Introduction" class="main-section">
+              <header class="head">Introduction</header>
+              <hr>
+			  	  	<div class="con2-inner">
+				  	  	<p>
+				  	  		Websites all around the world are programmed using various programming languages. While there are specific vulnerabilities in each programming langage that the developer should be aware of, there are issues fundamental to the internet that can show up regardless of the chosen language or framework.
+                  These vulnerabilities often show up in CTFs as web security challenges where the user needs to exploit a bug to gain some kind of higher level privelege.
+                  Common vulnerabilities to see in CTF challenges:
+				  	  	</p>
+				  	  	<ul>
+                  <li class="link-a"><a href="#SQL_Injection" class="anchor"> SQL Injection </a></li>
+                  <li class="link-a"><a href="#Command_Injection" class="anchor"> Command Injection</a></li>
+                  <li class="link-a"><a href="#Directory_Traversal" class="anchor"> Directory Traversal</a></li>
+                  <li class="link-a"><a href="#Cross_Site_Request_Forgery" class="anchor" > Cross Site Request Forgery </a></li>
+                  <li class="link-a"><a href="#Cross_Site_Scripting" class="anchor" > Cross Site Scripting </a></li>
+                  <li class="link-a"><a href="#Server_Side_Request_Forgery" class="anchor" > Server Side Request Forgery</a></li>
+				  	  	</ul>
+			  	  	</div>
+		  	  	</section>
+
+		  	  	<section id="SQL_Injection" class="main-section">
+              <header class="head">SQL Injection</header>
+              <hr>
+		  	  		<div class="con2-inner">
+  			  	  	<p>
+                  SQL Injection is a vulnerability where an application takes input from a user and doesn't vaildate that the user's input doesn't contain additional SQL.
+                </p>
+                <code class="codeblock">
+                  &lt;?php
+                  &nbsp;&nbsp;&#x24;username = $_GET['username']; // ana
+                  &nbsp;&nbsp;&#x24;result = mysql_query("SELECT * FROM users WHERE username='$username'");
+                  ?&gt;  
+                </code>
+  			  	  	<p>
+  			  	  		If we look at the $username variable, under normal operation we might expect the username parameter to be a real username (e.g. ana).
+  			  	  	</p>
+                <p>
+                 But a malicious user might submit different kind of data. For example, consider if the input was '?
+                </p>
+                <p>
+                  The application would crash because the resulting SQL query is incorrect.
+                </p>
+                <code class="codeblock">
+                  SELECT * FROM users WHERE username='''
+                </code>
+                <p>
+                  Note:<br>
+                  Notice the extra single quote at the end.
+                </p>
+                <p>
+                  With the knowledge that a single quote will cause an error in the application we can expand a little more on SQL Injection.
+                </p>
+                <p>
+                  What if our input was ' OR 1=1?
+                </p>
+                <code class="codeblock">
+                  SELECT * FROM users WHERE username='' OR 1=1
+                </code>
+                <p>
+                  1 is indeed equal to 1. This equates to true in SQL. If we reinterpret this the SQL statement is really saying
+                </p>
+                <code class="codeblock">
+                  SELECT * FROM users WHERE username='' OR true
+                </code>
+                <p>
+                  This will return every row in the table because each row that exists must be true.<br>
+                  We can also inject comments and termination characters like -- or /* or ;. This allows you to terminate SQL queries after your injected statements. For example '-- is a common SQL injection payload.
+                </p>
+                <code class="codeblock">
+                  SELECT * FROM users WHERE username=''-- '
+                </code>
+                <p>
+                  This payload sets the username parameter to an empty string to break out of the query and then adds a comment (--) that effectively hides the second single quote.<br>
+                  Using this technique of adding SQL statements to an existing query we can force databases to return data that it was not meant to return.
+                </p>
+			  	  	</div>
+		  	  	</section>
+
+            <section id="Command_Injection" class="main-section">
+              <header class="head">Command Injection</header>
+              <hr>
+              <div class="con2-inner">  
+                  <p>
+                    Command Injection is a vulnerability that allows an attacker to submit system commands to a computer running a website. This happens when the application fails to encode user input that goes into a system shell. It is very common to see this vulnerability when a developer uses the system() command or its equivalent in the programming language of the application.
+                  </p>
+                  <code class="codeblock">
+                    import os
+                    domain = user_input() # ctf101.org
+                    os.system('ping ' + domain)
+                  </code>
+                  <p>The above code when used normally will ping the ctf101.org domain.<br>
+                  But consider what would happen if the user_input() function returned different data?
+                  </p>
+                  <code class="codeblock">
+                    import os
+                    domain = user_input() # ; ls
+                    os.system('ping ' + domain)
+                  </code>
+                  <p>Because of the additional semicolon, the os.system() function is instructed to run two commands.<br>
+                     It looks to the program as:
+                  </p>
+                  <code class="codeblock">  
+                    ping ; ls
+                  </code>
+                  <p>
+                    Note:<br>
+                    The semicolon terminates a command in bash and allows you to put another command after it.
+                  </p>
+                  <p>
+                    Because the ping command is being terminated and the ls command is being added on, the ls command will be run in addition to the empty ping command!
+                  </p>
+                  <p>
+                    This is the core concept behind command injection. The ls command could of course be switched with another command (e.g. wget, curl, bash, etc.)
+                  </p>
+                  <p>
+                    Command injection is a very common means of privelege escalation within web applications and applications that interface with system commands. Many kinds of home routers take user input and directly append it to a system command. For this reason, many of those home router models are vulnerable to command injection.
+                  </p>
+                  
+                  <h3>Example Payloads</h3>
+                  <code class="codeblock">; ls</code>
+                  <code class="codeblock">$(ls)</code>
+                  <code class="codeblock">`ls`</code>
+
+              </div>
+            </section>
+
+            <section id="Directory_Traversal" class="main-section">
+              <header class="head">Directory Traversal</header>
+              <hr>
+              <div class="con2-inner">
+                  <p>
+                    Directory Traversal is a vulnerability where an application takes in user input and uses it in a directory path.
+                  </p>
+                  <p>
+                    Any kind of path controlled by user input that isn't properly sanitized or properly sandboxed could be vulnerable to directory traversal.
+                  </p>
+                  <p>
+                    For example, consider an application that allows the user to choose what page to load from a GET parameter.
+                  </p>
+                  <code class="codeblock">
+                    &lt?php
+                      &nbsp;&nbsp;&#x24;page = $_GET['page']; // index.php
+                      &nbsp;&nbsp;include("/var/www/html/" . $page);
+                    ?>
+                  </code>
+                  <p>
+                    Under normal operation the page would be index.php. But what if a malicious user gave in something different?
+                  </p>
+                  <code class="codeblock">
+                    &lt?php
+                      &nbsp;&nbsp;$page = $_GET['page']; // ../../../../../../../../etc/passwd
+                      &nbsp;&nbsp;include("/var/www/html/" . $page);
+                    ?>
+                  </code>
+                  <p>
+                    Here the user is submitting ../../../../../../../../etc/passwd.
+                  </p>
+                  <p>
+                    This will result in the PHP interpreter leaving the directory that it is coded to look in ('/var/www/html') and instead be forced up to the root folder.
+                  </p>
+                  <code class="codeblock">
+                    include("/var/www/html/../../../../../../../../etc/passwd");
+                  </code>
+                  <p>
+                    Ultimately this will become /etc/passwd because the computer will not go a directory above its top directory.<br>
+                    Thus the application will load the /etc/passwd file and emit it to the user like so:
+                  </p>
+                  <code class="codeblock">
+                    root:x:0:0:root:/root:/bin/bash
+                    daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+                    bin:x:2:2:bin:/bin:/usr/sbin/nologin
+                    sys:x:3:3:sys:/dev:/usr/sbin/nologin
+                    sync:x:4:65534:sync:/bin:/bin/sync
+                    games:x:5:60:games:/usr/games:/usr/sbin/nologin
+                    man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+                    lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+                    mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+                    news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+                    uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+                    proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+                    www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+                    backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+                    list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+                    irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+                    gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+                    nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+                    systemd-timesync:x:100:102:systemd Time Synchronization,,,:/run/systemd:/bin/false
+                    systemd-network:x:101:103:systemd Network Management,,,:/run/systemd/netif:/bin/false
+                    systemd-resolve:x:102:104:systemd Resolver,,,:/run/systemd/resolve:/bin/false
+                    systemd-bus-proxy:x:103:105:systemd Bus Proxy,,,:/run/systemd:/bin/false
+                    _apt:x:104:65534::/nonexistent:/bin/false
+                  </code>
+                  <p>
+                    This same concept can be applied to applications where some input is taken from a user and then used to access a file or path or similar. This vulnerability very often can be used to leak sensitive data or extract application source code to find other vulnerabilities.
+                  </p>
+                  
+              </div>
+            </section>
+
+            <section id="Cross_Site_Request_Forgery" class="main-section">
+              <header class="head">Cross Site Request Forgery</header>
+              <hr>
+              <div class="con2-inner">  
+                  <p>
+                    A Cross Site Request Forgery or CSRF Attack, pronounced see surf, is an attack on an authenticated user which uses a state session in order to perform state changing attacks like a purchase, a transfer of funds, or a change of email address.
+                  </p>
+                  <p>
+                    The entire premise of CSRF is based on session hijacking, usually by injecting malicious elements within a webpage through an <code> &ltimg> </code> tag or an <code>&ltiframe></code> where references to external resources are unverified.
+                  </p>
+                  <h3>Using CSRF</h3>
+                  <p>
+                    GET requests are often used by websites to get user input. Say a user signs in to an banking site which assigns their browser a cookie which keeps them logged in. If they transfer some money, the URL that is sent to the server might have the pattern:
+                  </p>
+                  <code class="codeblock">
+                    http://securibank.com/transfer.do?acct=[RECEPIENT]&amount=[DOLLARS]
+                  </code>
+                  <p>
+                    Knowing this format, an attacker can send an email with a hyperlink to be clicked on or they can include an image tag of 0 by 0 pixels which will automatically be requested by the browser such as:
+                  </p>
+                  <code class="codeblock">
+                    &ltimg src="http://securibank.com/transfer.do?acct=[RECEPIENT]&amount=[DOLLARS]" width="0" height="0" border="0">
+                  </code>
+                  
+              </div>
+            </section>
+
+            <section id="Cross_Site_Scripting" class="main-section">
+              <header class="head">Cross Site Scripting</header>
+              <hr>
+              <div class="con2-inner">  
+                  <p>
+                    Cross Site Scripting or XSS is a vulnerability where on user of an application can send JavaScript that is executed by the browser of another user of the same application.
+                  </p>
+                  <p>
+                    This is a vulnerability because JavaScript has a high degree of control over a user's web browser.
+                  </p>
+                  <p>
+                    For example JavaScript has the ability to:
+                  </p>
+                  <ul>
+                    <li class="link-b">Modify the page (called the DOM)</li>
+                    <li class="link-b">Send more HTTP requests</li>
+                    <li class="link-b">Access cookies</li>
+                  </ul>
+                  <p>
+                    By combining all of these abilities, XSS can maliciously use JavaScript to extract user's cookies and send them to an attacker controlled server. XSS can also modify the DOM to phish users for their passwords. This only scratches the surface of what XSS can be used to do.
+                  </p>
+                  <p>
+                    XSS is typically broken down into three categories:
+                  </p>
+                  <ul>
+                    <li class="link-c">Reflected XSS</li>
+                    <li class="link-c">Stored XSS</li>
+                    <li class="link-c">DOM XSS</li>
+                  </ul>
+                  <h3>Reflected XSS</h3>
+                  <p>
+                    Reflected XSS is when an XSS exploit is provided through a URL paramater.
+                  </p>
+                  <p>
+                    For example:
+                  </p>
+                  <code class="codeblock">
+                    http://localhost?data=&ltscript>alert(1)&lt/script>
+                  </code>
+                  <p>
+                    You can see the XSS exploit provided in the data GET parameter. If the application is vulnerable to reflected XSS, the application will take this data parameter value and inject it into the DOM.
+                    For example:
+                  </p>
+                  <code class="codeblock">
+                    &lthtml>
+                    &nbsp;&nbsp;&ltbody>
+                    &nbsp;&nbsp;&nbsp;&ltscript>alert(1)&lt/script>
+                    &nbsp;&nbsp;&lt/body>
+                    &lt/html>
+                  </code>
+                  <p>
+                    Depending on where the exploit gets injected, it may need to be constructed differently.
+                  </p>
+                  <p>
+                    Also, the exploit payload can change to fit whatever the attacker needs it to do. Whether that is to extract cookies and submit it to an external server, or to simply modify the page to deface it.
+                  </p>
+                  <p>
+                    One of the deficiencies of reflected XSS however is that it requires the victim to access the vulnerable page from an attacker controlled resource. Notice that if the data paramter, wasn't provided the exploit wouldn't work.
+                  </p>
+                  <p>
+                    In many situations, reflected XSS is detected by the browser because it is very simple for a browser to detect malicous XSS payloads in URLs.
+                  </p>
+                  <h3>Stored XSS</h3>
+                  <p>
+                    Stored XSS is different from reflected XSS in one key way. In reflected XSS, the exploit is provided through a GET parameter. But in stored XSS, the exploit is provided from the website itself.
+                  </p>
+                  <p>
+                    Imagine a website that allows users to post comments. If a user can submit an XSS payload as a comment, and then have others view that malicious comment, it would be an example of stored XSS.
+                  </p>
+                  <p>
+                    The reason being that the web site itself is serving up the XSS payload to other users. This makes it very difficult to detect from the browser's perspective and no browser is capable of generically preventing stored XSS from exploiting a user.
+
+                  </p>
+                  <h3>DOM XSS</h3>
+                  <p>
+                    DOM XSS is XSS that is due to the browser itself injecting an XSS payload into the DOM. While the server itself may properly prevent XSS, it's possible that the client side scripts may accidentally take a payload and insert it into the DOM and cause the payload to trigger.
+                  </p>
+                  <p>
+                    The server itself is not to blame, but the client side JavaScript files are causing the issue.
+                  </p>
+
+              </div>
+            </section>
+            <section id="Server_Side_Request_Forgery" class="main-section">
+              <header class="head">Server Side Request Forgery</header>
+              <hr>
+              <div class="con2-inner">
+                <p>
+                  Server Side Request Forgery or SSRF is where an attacker is able to cause a web application to send a request that the attacker defines.
+                </p>
+                <p>
+                  For example, say there is a website that lets you take a screenshot of any site on the internet.
+                </p>
+                <p>
+                  Under normal usage a user might ask it to take a screenshot of a page like Google, or The New York Times. But what if a user does something more nefarious? What if they asked the site to take a picture of http://localhost ? Or perhaps tries to access something more useful like http://localhost/server-status ?
+                </p>
+                <p>
+                  Note:<br>
+                  127.0.0.1 (also known as localhost or loopback) represents the computer itself. Accessing localhost means you are accessing the computer's own internal network. Developers often use localhost as a way to access the services they have running on their own computers.
+                </p>
+                <p>
+                  Depending on what the response from the site is the attacker may be able to gain additional information about what's running on the computer itself.
+                </p>
+                <p>
+                  In addition, the requests originating from the server would come from the server's IP not the attackers IP. Because of that, it is possible that the attacker might be able to access internal resources that he wouldn't normally be able to access.
+                </p>
+                <p>
+                  Another usage for SSRF is to create a simple port scanner to scan the internal network looking for internal services.
+                </p>
+              </div>
+             </section>
+             <section id="references" class="main-section">
+              <header class="head">Reference</header>
+              <hr>
+              <div class="con2-inner">
+               <p>All the documentation in this page is taken from <a href="https://ctf101.org/web-exploitation/overview/" target="_blank">CTF101</a>. </p>
+              </div>
+             </section>
+		  	  </div>
+		  	</div>
+        	<hr class="style1">
+		  	<footer class="con">
+			  	Copyright &copy; 2019 | <a href="#">CodeMe</a>
+			  </footer>
+		  </section>
+
+		</div>
+	</main>
+  <!-- <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script> -->
+  <script type="text/javascript" src="script.js"></script>
+</body>
+</html>
+
+
+
